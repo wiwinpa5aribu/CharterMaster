@@ -1,5 +1,11 @@
 # Markdown files (dokumentasi lokal)
-*.md
+# Ignore docs folder (internal documentation)
+docs/
+
+# Keep these markdown files in root
+!CHANGELOG.md
+!PROJECT-STATUS.md
+!README.md
 
 # Kiro spec files
 .kiro/
