@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
+             https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+
+    <persistence-unit name="mrh-buscharter" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        
+        <!-- Entity Classes -->
+        <class>com.mrh.buscharter.model.Tenant</class>
+        <class>com.mrh.buscharter.model.User</class>
+        <class>com.mrh.buscharter.model.Vehicle</class>
+        <class>com.mrh.buscharter.model.Driver</class>
+        <class>com.mrh.buscharter.model.Customer</class>
+        <class>com.mrh.buscharter.model.Booking</class>
+        <class>com.mrh.buscharter.model.Trip</class>
+        <class>com.mrh.buscharter.model.TripAssignment</class>
+        <class>com.mrh.buscharter.model.BookingCharge</class>
+        <class>com.mrh.buscharter.model.Payment</class>
+        
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        
+        <properties>
+            <!-- Hibernate properties akan di-override oleh DatabaseConfig -->
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.show_sql" value="false"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+            <property name="hibernate.jdbc.time_zone" value="Asia/Jakarta"/>
+        </properties>
+    </persistence-unit>
+
+</persistence>
