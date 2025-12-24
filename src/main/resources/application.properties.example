@@ -1,0 +1,17 @@
+# MRH Bus Charter - Database Configuration
+# Copy file ini ke application.properties dan isi dengan nilai yang sesuai
+
+# Database Connection
+db.url=jdbc:postgresql://localhost:5432/mrh_buscharter
+db.username=mrh_user
+db.password=YOUR_PASSWORD_HERE
+
+# Hibernate Settings
+hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+hibernate.show_sql=true
+hibernate.hbm2ddl.auto=validate
+
+# HikariCP Connection Pool
+hikari.maximum-pool-size=10
+hikari.minimum-idle=2
+hikari.idle-timeout=30000

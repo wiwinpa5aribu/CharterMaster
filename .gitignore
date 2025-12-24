@@ -23,3 +23,7 @@ Thumbs.db
 
 # Database
 *.sql
+
+# Sensitive config (jangan commit password!)
+application.properties
+.env
