@@ -1,0 +1,25 @@
+# Markdown files (dokumentasi lokal)
+*.md
+
+# Kiro spec files
+.kiro/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sql
