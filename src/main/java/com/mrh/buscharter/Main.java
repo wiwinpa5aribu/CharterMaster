@@ -1,12 +1,12 @@
 package com.mrh.buscharter;
 
-import com.formdev.flatlaf.FlatLightLaf;
 import com.mrh.buscharter.config.DatabaseConfig;
+import com.mrh.buscharter.service.AuthService;
+import com.mrh.buscharter.ui.AppTheme;
 import com.mrh.buscharter.ui.LoginDialog;
 import com.mrh.buscharter.ui.MainFrame;
 
 import javax.swing.*;
-import java.awt.*;
 
 /**
  * Entry point aplikasi MRH Bus Charter Management System.
@@ -19,7 +19,7 @@ public class Main {
     
     public static void main(String[] args) {
         // Setup Look and Feel
-        setupLookAndFeel();
+        AppTheme.setupLightTheme();
         
         // Jalankan di Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
@@ -27,12 +27,15 @@ public class Main {
                 // Inisialisasi database connection
                 DatabaseConfig.initialize();
                 
+                // Inisialisasi services
+                AuthService authService = new AuthService();
+                
                 // Tampilkan login dialog
-                LoginDialog loginDialog = new LoginDialog(null);
+                LoginDialog loginDialog = new LoginDialog(null, authService);
                 loginDialog.setVisible(true);
                 
                 // Jika login berhasil, tampilkan main frame
-                if (loginDialog.isLoginSuccessful()) {
+                if (loginDialog.isLoginBerhasil()) {
                     MainFrame mainFrame = new MainFrame();
                     mainFrame.setVisible(true);
                 } else {
@@ -48,30 +51,5 @@ public class Main {
                 System.exit(1);
             }
         });
-    }
-    
-    /**
-     * Setup FlatLaf Look and Feel dengan tema Enterprise Classic.
-     */
-    private static void setupLookAndFeel() {
-        try {
-            // Gunakan FlatLaf Light theme
-            FlatLightLaf.setup();
-            
-            // Konfigurasi UI defaults untuk Enterprise Classic look
-            UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 13));
-            UIManager.put("Table.rowHeight", 32);
-            UIManager.put("Tree.rowHeight", 28);
-            UIManager.put("List.rowHeight", 28);
-            UIManager.put("TabbedPane.showTabSeparators", true);
-            
-            // Warna status indicator
-            UIManager.put("mrh.status.konflik", new Color(220, 53, 69));    // Merah
-            UIManager.put("mrh.status.vendor", new Color(255, 193, 7));     // Kuning
-            UIManager.put("mrh.status.siap", new Color(40, 167, 69));       // Hijau
-            
-        } catch (Exception e) {
-            System.err.println("Gagal setup Look and Feel: " + e.getMessage());
-        }
     }
 }

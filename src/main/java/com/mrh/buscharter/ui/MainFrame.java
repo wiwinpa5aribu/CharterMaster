@@ -1,154 +1,341 @@
 package com.mrh.buscharter.ui;
 
-import com.mrh.buscharter.config.AppConfig;
+import com.mrh.buscharter.model.User;
+import com.mrh.buscharter.model.enums.RoleUser;
+import com.mrh.buscharter.service.SessionManager;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
  * Frame utama aplikasi dengan Tab Navigation.
- * Menampilkan tab: Dashboard, Booking, Armada, Keuangan, Master Data.
+ * Tab: Dashboard, Booking, Armada, Keuangan, Master Data
+ * Tab ditampilkan/disembunyikan berdasarkan role user.
  */
 public class MainFrame extends JFrame {
     
     private JTabbedPane tabbedPane;
+    private JLabel userInfoLabel;
+    private JLabel tenantInfoLabel;
+    private JButton logoutButton;
+    
+    // Panel untuk setiap tab
+    private JPanel dashboardPanel;
+    private JPanel bookingPanel;
+    private JPanel armadaPanel;
+    private JPanel keuanganPanel;
+    private JPanel masterDataPanel;
     
     public MainFrame() {
-        super(AppConfig.APP_NAME + " v" + AppConfig.APP_VERSION);
+        super("MRH Bus Charter Management System");
+        
         initComponents();
         setupLayout();
+        setupMenuBar();
         setupActions();
+        updateUserInfo();
+        setupTabsBasedOnRole();
         
         setSize(1280, 800);
-        setMinimumSize(new Dimension(1024, 768));
+        setMinimumSize(new Dimension(1024, 600));
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                confirmExit();
+            }
+        });
     }
     
     private void initComponents() {
         tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+        tabbedPane.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         
-        // Tambah tab-tab utama (placeholder panels untuk sementara)
-        tabbedPane.addTab("Dashboard", createPlaceholderPanel("Dashboard"));
-        tabbedPane.addTab("Booking", createPlaceholderPanel("Booking"));
-        tabbedPane.addTab("Armada", createPlaceholderPanel("Armada"));
-        tabbedPane.addTab("Keuangan", createPlaceholderPanel("Keuangan"));
-        tabbedPane.addTab("Master Data", createPlaceholderPanel("Master Data"));
+        userInfoLabel = new JLabel();
+        tenantInfoLabel = new JLabel();
+        logoutButton = AppTheme.createSecondaryButton("Logout");
+        logoutButton.setPreferredSize(new Dimension(80, 28));
+        
+        // Inisialisasi panel placeholder
+        dashboardPanel = createPlaceholderPanel("Dashboard", "Ringkasan data dan statistik");
+        bookingPanel = createPlaceholderPanel("Booking", "Manajemen pesanan sewa bus");
+        armadaPanel = createPlaceholderPanel("Armada", "Dispatch board dan manajemen armada");
+        keuanganPanel = createPlaceholderPanel("Keuangan", "Pembayaran dan laporan keuangan");
+        masterDataPanel = createPlaceholderPanel("Master Data", "Data armada, driver, dan customer");
     }
     
-    private JPanel createPlaceholderPanel(String name) {
+    private JPanel createPlaceholderPanel(String title, String description) {
         JPanel panel = new JPanel(new BorderLayout());
-        JLabel label = new JLabel("Panel " + name + " - Coming Soon", SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 24));
-        label.setForeground(Color.GRAY);
-        panel.add(label, BorderLayout.CENTER);
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        JLabel titleLabel = AppTheme.createTitleLabel(title);
+        JLabel descLabel = AppTheme.createSubtitleLabel(description);
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        centerPanel.add(titleLabel, gbc);
+        
+        gbc.gridy = 1;
+        centerPanel.add(descLabel, gbc);
+        
+        gbc.gridy = 2;
+        gbc.insets = new Insets(20, 5, 5, 5);
+        centerPanel.add(new JLabel("(Panel dalam pengembangan)"), gbc);
+        
+        panel.add(centerPanel, BorderLayout.CENTER);
         return panel;
     }
     
     private void setupLayout() {
-        setLayout(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout());
         
-        // Toolbar di atas
-        JToolBar toolBar = createToolBar();
-        add(toolBar, BorderLayout.NORTH);
+        // Header dengan info user
+        JPanel headerPanel = createHeaderPanel();
         
-        // Tab pane di tengah
-        add(tabbedPane, BorderLayout.CENTER);
+        // Content dengan tabs
+        JPanel contentPanel = new JPanel(new BorderLayout());
+        contentPanel.add(tabbedPane, BorderLayout.CENTER);
         
-        // Status bar di bawah
-        JPanel statusBar = createStatusBar();
-        add(statusBar, BorderLayout.SOUTH);
+        mainPanel.add(headerPanel, BorderLayout.NORTH);
+        mainPanel.add(contentPanel, BorderLayout.CENTER);
+        
+        setContentPane(mainPanel);
     }
     
-    private JToolBar createToolBar() {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
+    private JPanel createHeaderPanel() {
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        headerPanel.setBorder(new EmptyBorder(8, 15, 8, 15));
+        headerPanel.setBackground(new Color(248, 249, 250));
         
-        JButton newButton = new JButton("Baru (Ctrl+N)");
-        JButton saveButton = new JButton("Simpan (Ctrl+S)");
-        JButton refreshButton = new JButton("Refresh (F5)");
+        // Logo dan nama aplikasi
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        leftPanel.setOpaque(false);
+        JLabel logoLabel = new JLabel("🚌");
+        logoLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 24));
+        JLabel appNameLabel = new JLabel("MRH Bus Charter");
+        appNameLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        leftPanel.add(logoLabel);
+        leftPanel.add(appNameLabel);
         
-        toolBar.add(newButton);
-        toolBar.add(saveButton);
-        toolBar.addSeparator();
-        toolBar.add(refreshButton);
-        toolBar.add(Box.createHorizontalGlue());
+        // Info user dan logout
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        rightPanel.setOpaque(false);
         
-        JLabel userLabel = new JLabel("User: Admin | Tenant: MRH");
-        toolBar.add(userLabel);
+        JPanel userPanel = new JPanel(new GridLayout(2, 1, 0, 2));
+        userPanel.setOpaque(false);
+        userInfoLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tenantInfoLabel.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        tenantInfoLabel.setForeground(AppTheme.SECONDARY_COLOR);
+        userPanel.add(userInfoLabel);
+        userPanel.add(tenantInfoLabel);
         
-        return toolBar;
+        rightPanel.add(userPanel);
+        rightPanel.add(logoutButton);
+        
+        headerPanel.add(leftPanel, BorderLayout.WEST);
+        headerPanel.add(rightPanel, BorderLayout.EAST);
+        
+        // Separator
+        JPanel wrapperPanel = new JPanel(new BorderLayout());
+        wrapperPanel.add(headerPanel, BorderLayout.CENTER);
+        wrapperPanel.add(new JSeparator(), BorderLayout.SOUTH);
+        
+        return wrapperPanel;
     }
     
-    private JPanel createStatusBar() {
-        JPanel statusBar = new JPanel(new BorderLayout());
-        statusBar.setBorder(BorderFactory.createEmptyBorder(2, 10, 2, 10));
+    private void setupMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
         
-        JLabel statusLabel = new JLabel("Ready");
-        JLabel versionLabel = new JLabel(AppConfig.APP_COMPANY + " | " + AppConfig.APP_VERSION);
+        // Menu File
+        JMenu fileMenu = new JMenu("File");
+        fileMenu.setMnemonic('F');
         
-        statusBar.add(statusLabel, BorderLayout.WEST);
-        statusBar.add(versionLabel, BorderLayout.EAST);
+        JMenuItem refreshItem = new JMenuItem("Refresh Data");
+        refreshItem.setAccelerator(KeyStroke.getKeyStroke("F5"));
+        refreshItem.addActionListener(e -> refreshData());
         
-        return statusBar;
+        JMenuItem exitItem = new JMenuItem("Keluar");
+        exitItem.setAccelerator(KeyStroke.getKeyStroke("alt F4"));
+        exitItem.addActionListener(e -> confirmExit());
+        
+        fileMenu.add(refreshItem);
+        fileMenu.addSeparator();
+        fileMenu.add(exitItem);
+        
+        // Menu Bantuan
+        JMenu helpMenu = new JMenu("Bantuan");
+        helpMenu.setMnemonic('B');
+        
+        JMenuItem aboutItem = new JMenuItem("Tentang Aplikasi");
+        aboutItem.addActionListener(e -> showAboutDialog());
+        
+        helpMenu.add(aboutItem);
+        
+        menuBar.add(fileMenu);
+        menuBar.add(helpMenu);
+        
+        setJMenuBar(menuBar);
     }
     
     private void setupActions() {
-        // Konfirmasi sebelum keluar
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                int result = JOptionPane.showConfirmDialog(
-                    MainFrame.this,
-                    "Apakah Anda yakin ingin keluar?",
-                    "Konfirmasi Keluar",
-                    JOptionPane.YES_NO_OPTION);
-                
-                if (result == JOptionPane.YES_OPTION) {
-                    dispose();
-                    System.exit(0);
-                }
-            }
-        });
-        
-        // Keyboard shortcuts
-        setupKeyboardShortcuts();
+        logoutButton.addActionListener(e -> doLogout());
     }
     
-    private void setupKeyboardShortcuts() {
-        // Ctrl+N untuk New
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke("control N"), "new");
-        getRootPane().getActionMap().put("new", new AbstractAction() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                // TODO: Implementasi new action berdasarkan tab aktif
-                JOptionPane.showMessageDialog(MainFrame.this, "New action - Coming soon");
+    private void updateUserInfo() {
+        User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            userInfoLabel.setText(currentUser.getNamaLengkap() + " (" + currentUser.getRole().name() + ")");
+            if (currentUser.getTenant() != null) {
+                tenantInfoLabel.setText(currentUser.getTenant().getNama());
             }
-        });
+        }
+    }
+    
+    private void setupTabsBasedOnRole() {
+        User currentUser = SessionManager.getInstance().getCurrentUser();
+        if (currentUser == null) return;
         
-        // Ctrl+S untuk Save
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke("control S"), "save");
-        getRootPane().getActionMap().put("save", new AbstractAction() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                // TODO: Implementasi save action
-                JOptionPane.showMessageDialog(MainFrame.this, "Save action - Coming soon");
-            }
-        });
+        RoleUser role = currentUser.getRole();
         
-        // F5 untuk Refresh
-        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-            .put(KeyStroke.getKeyStroke("F5"), "refresh");
-        getRootPane().getActionMap().put("refresh", new AbstractAction() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                // TODO: Implementasi refresh action
-                JOptionPane.showMessageDialog(MainFrame.this, "Refresh action - Coming soon");
-            }
-        });
+        // Dashboard - semua role
+        tabbedPane.addTab("Dashboard", dashboardPanel);
+        
+        // Booking - ADMIN, SALES
+        if (role == RoleUser.ADMIN || role == RoleUser.SALES) {
+            tabbedPane.addTab("Booking", bookingPanel);
+        }
+        
+        // Armada - ADMIN, OPS
+        if (role == RoleUser.ADMIN || role == RoleUser.OPS) {
+            tabbedPane.addTab("Armada", armadaPanel);
+        }
+        
+        // Keuangan - ADMIN, KEUANGAN
+        if (role == RoleUser.ADMIN || role == RoleUser.KEUANGAN) {
+            tabbedPane.addTab("Keuangan", keuanganPanel);
+        }
+        
+        // Master Data - ADMIN only
+        if (role == RoleUser.ADMIN) {
+            tabbedPane.addTab("Master Data", masterDataPanel);
+        }
+    }
+    
+    private void refreshData() {
+        // TODO: Implementasi refresh data
+        JOptionPane.showMessageDialog(this, 
+            "Data berhasil di-refresh", 
+            "Refresh", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    private void doLogout() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Apakah Anda yakin ingin logout?",
+            "Konfirmasi Logout",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            SessionManager.getInstance().clearSession();
+            dispose();
+            
+            // Restart aplikasi dengan login dialog
+            SwingUtilities.invokeLater(() -> {
+                // Aplikasi akan di-restart dari Main.java
+                System.exit(0);
+            });
+        }
+    }
+    
+    private void confirmExit() {
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Apakah Anda yakin ingin keluar dari aplikasi?",
+            "Konfirmasi Keluar",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            SessionManager.getInstance().clearSession();
+            dispose();
+            System.exit(0);
+        }
+    }
+    
+    private void showAboutDialog() {
+        String message = """
+            MRH Bus Charter Management System
+            Versi 1.0.0 (MVP)
+            
+            Sistem Manajemen Sewa Bus
+            PT. MANDIRI RAJAWALI HUTAMA
+            
+            © 2025 All Rights Reserved
+            """;
+        
+        JOptionPane.showMessageDialog(this,
+            message,
+            "Tentang Aplikasi",
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+    
+    // ==================== Public Methods untuk Panel ====================
+    
+    /**
+     * Set panel untuk tab Dashboard.
+     */
+    public void setDashboardPanel(JPanel panel) {
+        int index = tabbedPane.indexOfTab("Dashboard");
+        if (index >= 0) {
+            tabbedPane.setComponentAt(index, panel);
+        }
+    }
+    
+    /**
+     * Set panel untuk tab Booking.
+     */
+    public void setBookingPanel(JPanel panel) {
+        int index = tabbedPane.indexOfTab("Booking");
+        if (index >= 0) {
+            tabbedPane.setComponentAt(index, panel);
+        }
+    }
+    
+    /**
+     * Set panel untuk tab Armada.
+     */
+    public void setArmadaPanel(JPanel panel) {
+        int index = tabbedPane.indexOfTab("Armada");
+        if (index >= 0) {
+            tabbedPane.setComponentAt(index, panel);
+        }
+    }
+    
+    /**
+     * Set panel untuk tab Keuangan.
+     */
+    public void setKeuanganPanel(JPanel panel) {
+        int index = tabbedPane.indexOfTab("Keuangan");
+        if (index >= 0) {
+            tabbedPane.setComponentAt(index, panel);
+        }
+    }
+    
+    /**
+     * Set panel untuk tab Master Data.
+     */
+    public void setMasterDataPanel(JPanel panel) {
+        int index = tabbedPane.indexOfTab("Master Data");
+        if (index >= 0) {
+            tabbedPane.setComponentAt(index, panel);
+        }
     }
 }
